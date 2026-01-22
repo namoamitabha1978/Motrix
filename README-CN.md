@@ -134,7 +134,71 @@ flatpak run net.agalwood.Motrix
 - 🌑 深色模式
 - 🗑 移除任务时可同时删除相关文件
 - 🌍 国际化，[查看已可选的语言](#-国际化)
+- 🖥️ 命令行支持，允许从终端添加下载任务
+- 📄 支持从 txt 文件批量添加下载任务
+- 📁 支持命令行指定下载目录
+- ⚡ 支持自动确认下载，无需手动点击确认按钮
 - 🛠 更多特性开发中
+
+## 🖥️ 命令行使用
+
+Motrix 支持通过命令行添加下载任务，无需打开图形界面。以下是命令行使用的详细说明：
+
+### 基本语法
+
+```bash
+motrix [选项] <下载链接或文件>
+```
+
+### 支持的选项
+
+| 选项 | 别名 | 描述 |
+|------|------|------|
+| `--dir <路径>` | `-d` | 指定下载目录，如果目录不存在会自动创建 |
+| `--output <路径>` | `-o` | 同 `--dir`，指定下载目录 |
+
+### 支持的下载任务类型
+
+1. **单个下载链接**
+   ```bash
+   motrix https://example.com/file.zip
+   ```
+
+2. **多个下载链接**
+   ```bash
+   motrix https://example.com/file1.zip https://example.com/file2.zip
+   ```
+
+3. **从 txt 文件批量下载**
+   ```bash
+   motrix --dir D:\Downloads urls.txt
+   ```
+   
+   `urls.txt` 文件格式：每行一个 URL，以 `#` 开头的行视为注释
+   ```
+   # 这是一个注释
+   https://example.com/file1.zip
+   https://example.com/file2.zip
+   magnet:?xt=urn:btih:...
+   ```
+
+4. **种子文件**
+   ```bash
+   motrix --dir D:\Downloads example.torrent
+   ```
+
+5. **磁力链**
+   ```bash
+   motrix --dir D:\Downloads magnet:?xt=urn:btih:...
+   ```
+
+### 自动确认下载
+
+通过命令行添加的下载任务会自动确认，无需手动点击确认按钮，直接开始下载。
+
+### 单实例运行
+
+Motrix 采用单实例运行模式，当你尝试启动第二个实例时，它会自动将命令行参数传递给第一个实例处理，然后退出。
 
 ## 🖥 应用界面
 

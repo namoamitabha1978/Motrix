@@ -8,7 +8,10 @@ import Application from './Application'
 import {
   splitArgv,
   parseArgvAsUrl,
-  parseArgvAsFile
+  parseArgvAsFile,
+  parseArgvAsDownloadTask,
+  hasHelpOption,
+  showHelp
 } from './utils'
 import { EMPTY_STRING } from '@shared/constants'
 
@@ -17,6 +20,8 @@ export default class Launcher extends EventEmitter {
     super()
     this.url = EMPTY_STRING
     this.file = EMPTY_STRING
+    this.downloadTasks = []
+    this.downloadOptions = {}
 
     this.makeSingleInstance(() => {
       this.init()
@@ -33,12 +38,18 @@ export default class Launcher extends EventEmitter {
     const gotSingleLock = app.requestSingleInstanceLock()
 
     if (!gotSingleLock) {
+      logger.info('[Motrix] another instance is running, quitting...')
       app.quit()
     } else {
       app.on('second-instance', (event, argv, workingDirectory) => {
-        global.application.showPage('index')
-        if (!is.macOS() && argv.length > 1) {
-          this.handleAppLaunchArgv(argv)
+        logger.info('[Motrix] second instance detected, showing main window...')
+        if (global.application) {
+          global.application.showPage('index')
+          // 处理第二个实例的命令行参数，在所有平台上都处理
+          if (argv.length > 1) {
+            logger.info('[Motrix] handling second instance argv:', argv)
+            this.handleAppLaunchArgv(argv)
+          }
         }
       })
 
@@ -52,6 +63,13 @@ export default class Launcher extends EventEmitter {
     this.openedAtLogin = is.macOS()
       ? app.getLoginItemSettings().wasOpenedAtLogin
       : false
+
+    // 检查命令行参数是否有帮助选项，如果有则显示帮助信息并退出
+    if (process.argv.length > 1 && hasHelpOption(process.argv)) {
+      showHelp()
+      app.quit()
+      return
+    }
 
     if (process.argv.length > 1) {
       this.handleAppLaunchArgv(process.argv)
@@ -120,12 +138,31 @@ export default class Launcher extends EventEmitter {
   handleAppLaunchArgv (argv) {
     logger.info('[Motrix] handleAppLaunchArgv:', argv)
 
+    // 检查是否有帮助选项
+    if (hasHelpOption(argv)) {
+      showHelp()
+      app.quit()
+      return
+    }
+
     // args: array, extra: map
     const { args, extra } = splitArgv(argv)
     logger.info('[Motrix] split argv args:', args)
     logger.info('[Motrix] split argv extra:', extra)
     if (extra['--opened-at-login'] === '1') {
       this.openedAtLogin = true
+    }
+
+    // 解析下载任务
+    const { tasks, options } = parseArgvAsDownloadTask(argv)
+    logger.info('[Motrix] parsed download tasks:', tasks)
+    logger.info('[Motrix] parsed options:', options)
+
+    if (tasks.length > 0) {
+      this.downloadTasks = tasks
+      this.downloadOptions = options
+      this.sendDownloadTasksToApplication()
+      return
     }
 
     const file = parseArgvAsFile(args)
@@ -155,6 +192,14 @@ export default class Launcher extends EventEmitter {
     }
   }
 
+  sendDownloadTasksToApplication () {
+    if (this.downloadTasks.length > 0 && global.application && global.application.isReady) {
+      global.application.handleDownloadTasks(this.downloadTasks, this.downloadOptions)
+      this.downloadTasks = []
+      this.downloadOptions = {}
+    }
+  }
+
   handelAppReady () {
     app.on('ready', () => {
       global.application = new Application()
@@ -166,8 +211,8 @@ export default class Launcher extends EventEmitter {
 
       global.application.on('ready', () => {
         this.sendUrlToApplication()
-
         this.sendFileToApplication()
+        this.sendDownloadTasksToApplication()
       })
     })
 

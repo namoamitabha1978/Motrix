@@ -45,8 +45,8 @@ export default class ProtocolManager extends EventEmitter {
     })
   }
 
-  handle (url) {
-    logger.info(`[Motrix] protocol url: ${url}`)
+  handle (url, options = {}) {
+    logger.info(`[Motrix] protocol url: ${url}, options:`, options)
 
     if (
       url.toLowerCase().startsWith('ftp:') ||
@@ -55,29 +55,30 @@ export default class ProtocolManager extends EventEmitter {
       url.toLowerCase().startsWith('magnet:') ||
       url.toLowerCase().startsWith('thunder:')
     ) {
-      return this.handleResourceProtocol(url)
+      return this.handleResourceProtocol(url, options)
     }
 
     if (
       url.toLowerCase().startsWith('mo:') ||
       url.toLowerCase().startsWith('motrix:')
     ) {
-      return this.handleMoProtocol(url)
+      return this.handleMoProtocol(url, options)
     }
   }
 
-  handleResourceProtocol (url) {
+  handleResourceProtocol (url, options = {}) {
     if (!url) {
       return
     }
 
     global.application.sendCommandToAll('application:new-task', {
       type: ADD_TASK_TYPE.URI,
-      uri: url
+      uri: url,
+      silent: options.silent
     })
   }
 
-  handleMoProtocol (url) {
+  handleMoProtocol (url, options = {}) {
     const parsed = new URL(url)
     const { host, search } = parsed
     logger.info('[Motrix] protocol parsed:', parsed, host)

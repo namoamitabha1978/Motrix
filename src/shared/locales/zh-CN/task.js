@@ -1,5 +1,5 @@
 export default {
-  'active': '下载中',
+  'active': '下载中-[南无阿弥陀佛]',
   'waiting': '等待中',
   'stopped': '已停止',
   'new-task': '新建任务',
@@ -116,5 +116,9 @@ export default {
   'bt-download-complete-tips': '提示：你可以停止任务结束做种',
   'bt-stopping-seeding-tip': '正在停止做种，断开连接需要些时间，请耐心等待...',
   'download-fail-message': '{{taskName}} 下载失败',
-  'download-fail-notify': '下载失败'
+  'download-fail-notify': '下载失败',
+  'delete-all-tasks': '删除全部任务',
+  'confirm-delete-all-tasks': '你确定要删除当前列表中的所有任务吗?',
+  'delete-all-tasks-success': '删除全部任务成功',
+  'delete-all-tasks-fail': '删除全部任务失败'
 }

@@ -28,6 +28,17 @@
       class="item"
       effect="dark"
       placement="bottom"
+      :content="$t('task.delete-all-tasks')"
+      v-if="currentList === 'active'"
+    >
+      <i class="task-action" @click="onDeleteAllClick">
+        <mo-icon name="delete" width="14" height="14" />
+      </i>
+    </el-tooltip>
+    <el-tooltip
+      class="item"
+      effect="dark"
+      placement="bottom"
       :content="$t('task.refresh-list')"
     >
       <i class="task-action" @click="onRefreshClick">
@@ -154,6 +165,23 @@
       },
       onAddClick () {
         this.$store.dispatch('app/showAddTaskDialog', ADD_TASK_TYPE.URI)
+      },
+      onDeleteAllClick () {
+        this.$confirm(this.$t('task.confirm-delete-all-tasks'), this.$t('task.confirm'), {
+          confirmButtonText: this.$t('task.confirm'),
+          cancelButtonText: this.$t('task.cancel'),
+          type: 'warning'
+        }).then(() => {
+          this.$store.dispatch('task/deleteAllTasks')
+            .then(() => {
+              this.$msg.success(this.$t('task.delete-all-tasks-success'))
+            })
+            .catch(() => {
+              this.$msg.error(this.$t('task.delete-all-tasks-fail'))
+            })
+        }).catch(() => {
+          // 用户取消删除操作
+        })
       }
     }
   }

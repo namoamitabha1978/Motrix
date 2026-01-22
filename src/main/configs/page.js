@@ -11,7 +11,7 @@ export default {
       transparent: is.macOS()
     },
     bindCloseToHide: true,
-    openDevTools: is.dev(),
+    openDevTools: false,
     url: is.dev() ? 'http://localhost:9080' : require('path').join('file://', __dirname, '/index.html')
   }
 }

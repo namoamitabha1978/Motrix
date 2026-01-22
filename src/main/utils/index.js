@@ -134,6 +134,69 @@ export const splitArgv = (argv) => {
   return { args, extra }
 }
 
+export const showHelp = () => {
+  console.log('\nMotrix 命令行帮助信息\n')
+  console.log('使用方法:')
+  console.log('  motrix [选项] <下载链接或文件>\n')
+  console.log('选项:')
+  console.log('  -h, --help         显示帮助信息')
+  console.log('  --dir <路径>       指定下载目录（不存在会自动创建）')
+  console.log('  --output <路径>    同 --dir，指定下载目录')
+  console.log('  --silent           自动确认下载，无需手动点击确认按钮\n')
+  console.log('支持的下载任务类型:')
+  console.log('  1. 单个下载链接       motrix https://example.com/file.zip')
+  console.log('  2. 多个下载链接       motrix https://example.com/file1.zip https://example.com/file2.zip')
+  console.log('  3. 批量下载列表文件    motrix --dir D:\\Downloads urls.txt')
+  console.log('  4. 种子文件           motrix --dir D:\\Downloads example.torrent')
+  console.log('  5. 磁力链            motrix --dir D:\\Downloads magnet:?xt=urn:btih:...\n')
+  console.log('示例:')
+  console.log('  motrix --dir D:\\Downloads https://example.com/file.zip')
+  console.log('  motrix --silent urls.txt\n')
+}
+
+export const hasHelpOption = (argv) => {
+  return argv.includes('-h') || argv.includes('--help') || argv.includes('/?')
+}
+
+export const parseArgvAsDownloadTask = (argv) => {
+  const tasks = []
+  const options = {}
+
+  let i = 1
+  while (i < argv.length) {
+    const arg = argv[i]
+
+    if (arg === '-h' || arg === '--help' || arg === '/?') {
+      // 忽略帮助选项，在调用处处理
+      options.help = true
+    } else if (arg.startsWith('--')) {
+      const kv = arg.split('=')
+      const key = kv[0].substring(2)
+      let value = kv[1] || '1'
+
+      // 处理不带等号的选项值，如 --dir C:\Downloads
+      if (value === '1' && i + 1 < argv.length && !argv[i + 1].startsWith('--')) {
+        value = argv[i + 1]
+        i++
+      }
+
+      options[key] = value
+    } else if (arg.endsWith('.txt')) {
+      // 批量下载列表文件
+      tasks.push({ type: 'list', path: arg })
+    } else if (checkIsSupportedSchema(arg)) {
+      // 单个下载链接
+      tasks.push({ type: 'url', url: arg })
+    } else {
+      // 可能是种子文件
+      tasks.push({ type: 'file', path: arg })
+    }
+    i++
+  }
+
+  return { tasks, options }
+}
+
 export const parseArgvAsUrl = (argv) => {
   const arg = argv[1]
   if (!arg) {

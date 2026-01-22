@@ -646,10 +646,10 @@ export default class Application extends EventEmitter {
     })
   }
 
-  handleProtocol (url) {
+  handleProtocol (url, options = {}) {
     this.show()
 
-    this.protocolManager.handle(url)
+    this.protocolManager.handle(url, options)
   }
 
   handleFile (filePath) {
@@ -673,6 +673,88 @@ export default class Application extends EventEmitter {
       this.sendCommandToAll('application:new-bt-task-with-file', {
         name,
         dataURL
+      })
+    })
+  }
+
+  handleDownloadTasks (tasks, options) {
+    logger.info('[Motrix] handle download tasks:', tasks, options)
+
+    this.show()
+
+    // 处理命令行指定的下载目录
+    const customDir = options.dir || options.output || options.o
+
+    if (customDir) {
+      logger.info('[Motrix] setting custom download directory:', customDir)
+
+      // 自动创建不存在的下载目录
+      const { mkdirSync } = require('node:fs')
+      try {
+        mkdirSync(customDir, { recursive: true })
+        logger.info('[Motrix] created download directory:', customDir)
+      } catch (err) {
+        logger.error('[Motrix] failed to create download directory:', customDir, err.message)
+      }
+
+      // 设置自定义下载目录
+      this.configManager.setSystemConfig('dir', customDir)
+      // 更新aria2的全局配置
+      this.engineClient.changeGlobalOption({ dir: customDir })
+    }
+
+    tasks.forEach(task => {
+      switch (task.type) {
+      case 'url':
+        // 单个下载链接，命令行自动确认
+        this.handleProtocol(task.url, { silent: true })
+        break
+      case 'file':
+        // 种子文件
+        this.handleFile(task.path)
+        break
+      case 'list':
+        // 批量下载列表文件
+        this.handleDownloadList(task.path)
+        break
+      default:
+        logger.warn('[Motrix] unknown task type:', task.type)
+      }
+    })
+
+    // 恢复原下载目录（可选，根据需求决定是否恢复）
+    // const originalDir = this.configManager.getSystemConfig('dir')
+    // if (customDir) {
+    //   this.configManager.setSystemConfig('dir', originalDir)
+    //   this.engineClient.changeGlobalOption({ dir: originalDir })
+    // }
+  }
+
+  handleDownloadList (listPath) {
+    logger.info('[Motrix] handle download list:', listPath)
+
+    const { resolve, isAbsolute } = require('path')
+    // 如果是相对路径，使用当前工作目录解析
+    const resolvedPath = isAbsolute(listPath) ? listPath : resolve(process.cwd(), listPath)
+    logger.info('[Motrix] resolved download list path:', resolvedPath)
+
+    readFile(resolvedPath, 'utf8', (err, content) => {
+      if (err) {
+        logger.error(`[Motrix] read download list error: ${resolvedPath}`, err.message)
+        return
+      }
+
+      // 解析列表文件，每行一个URL
+      const lines = content.split('\n')
+      const urls = lines.filter(line => {
+        const trimmed = line.trim()
+        return trimmed && !trimmed.startsWith('#')
+      })
+
+      logger.info(`[Motrix] parsed ${urls.length} URLs from list: ${resolvedPath}`)
+
+      urls.forEach(url => {
+        this.handleProtocol(url, { silent: true })
       })
     })
   }

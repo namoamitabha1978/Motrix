@@ -300,6 +300,17 @@ const actions = {
         dispatch('fetchList')
         dispatch('saveSession')
       })
+  },
+  deleteAllTasks ({ state, dispatch }) {
+    const gids = state.taskList.map((task) => task.gid)
+    if (gids.length === 0) {
+      return Promise.resolve(true)
+    }
+    return api.batchRemoveTask({ gids })
+      .finally(() => {
+        dispatch('fetchList')
+        dispatch('saveSession')
+      })
   }
 }
 

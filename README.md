@@ -137,7 +137,71 @@ flatpak run net.agalwood.Motrix
 - 🌑 Dark mode
 - 🗑 Delete related files when removing tasks (optional)
 - 🌍 I18n, [View supported languages](#-internationalization).
+- 🖥️ Command line support for adding download tasks
+- 📄 Batch download from txt files
+- 📁 Support for specifying download directory via command line
+- ⚡ Auto-confirm downloads, no manual confirmation needed
 - 🛠 More features in development
+
+## 🖥️ Command Line Usage
+
+Motrix supports adding download tasks via command line without opening the graphical interface. Here's the detailed usage:
+
+### Basic Syntax
+
+```bash
+motrix [options] <download links or files>
+```
+
+### Supported Options
+
+| Option | Alias | Description |
+|--------|-------|-------------|
+| `--dir <path>` | `-d` | Specify download directory, will be created automatically if it doesn't exist |
+| `--output <path>` | `-o` | Same as `--dir`, specify download directory |
+
+### Supported Download Task Types
+
+1. **Single Download Link**
+   ```bash
+   motrix https://example.com/file.zip
+   ```
+
+2. **Multiple Download Links**
+   ```bash
+   motrix https://example.com/file1.zip https://example.com/file2.zip
+   ```
+
+3. **Batch Download from txt File**
+   ```bash
+   motrix --dir /path/to/downloads urls.txt
+   ```
+   
+   `urls.txt` format: one URL per line, lines starting with `#` are treated as comments
+   ```
+   # This is a comment
+   https://example.com/file1.zip
+   https://example.com/file2.zip
+   magnet:?xt=urn:btih:...
+   ```
+
+4. **Torrent Files**
+   ```bash
+   motrix --dir /path/to/downloads example.torrent
+   ```
+
+5. **Magnet Links**
+   ```bash
+   motrix --dir /path/to/downloads magnet:?xt=urn:btih:...
+   ```
+
+### Auto-Confirm Downloads
+
+Download tasks added via command line are automatically confirmed, no manual confirmation needed. They start downloading immediately.
+
+### Single Instance Mode
+
+Motrix uses single instance mode. When you try to start a second instance, it automatically passes the command line arguments to the first instance for processing and then exits.
 
 ## 🖥 User Interface
 

@@ -158,6 +158,10 @@ export default class UpdateManager extends EventEmitter {
       : (error.stack || error).toString()
 
     this.updater.logger.warn(`[Motrix] update-error: ${msg}`)
-    dialog.showErrorBox('Error', msg)
+
+    // 只在用户手动检查更新时显示错误框，自动检查时忽略
+    if (this.autoCheckData.userCheck) {
+      dialog.showErrorBox('Error', msg)
+    }
   }
 }
